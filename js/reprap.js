@@ -1,12 +1,13 @@
 /*! Reprap Ormerod Web Control | by Matt Burnett <matt@burny.co.uk>. | open license
  */
-var ver = 0.98; //App version
+var ver = 0.99; //App version
 var polling = false; 
 var printing = false;
 var paused = false;
 var chart,chart2,ormerodIP,layerCount,currentLayer,objHeight,objTotalFilament,printStartTime,gFilename,ubuff,timerStart,storage,layerHeight,lastUpdatedTime;
 var startingFilamentPos = [], currentFilamentPos = [], objUsedFilament = [];
 var sFactor = 100, e1Factor = 100, e2Factor = 100;
+var sSliderActive = false, e1SliderActive = false, e2SliderActive = false;
 var maxUploadBuffer = 2000;
 var messageSeqId = 0;
 var currentTool = 0;
@@ -44,6 +45,7 @@ jQuery.extend({
                 query = "?gcode="+encodeURIComponent(code);
                 break;
  			case 'fileinfo':
+				if (code == null) break;
 			case 'upload_begin':
 			case 'delete':
 				query = "?name="+encodeURIComponent(code);
@@ -137,76 +139,90 @@ $('#connect').on('click', function() {
 		if (resp !== undefined && resp.hasOwnProperty('myName') && resp.myName.length != 0) {
 			$('span#machineName').text(resp.myName);
 		}
+		resp = $.askElle("fileinfo", null);
+		if (resp != undefined && resp.hasOwnProperty('fileName')) {
+			var temp = updateFileTableInfo(resp, 'slic3rMain');
+			layerHeight = temp[0];
+			var height = temp[1], filament = temp[2];
+			$('span#gFileDisplay').html('<strong>Printing ' + resp.fileName + ' from Duet SD card</strong>');
+			resetLayerData(height, filament);
+			$('progress#printProgressBar').show();
+			$('#tabs a:eq(1)').tab('show');
+		}
         poll();
     }
 });
 
 //temp controls
-$('div#bedTemperature button#setBedTemp').on('click', function() { 
-    $.askElle('gcode', "M140 S" + $('input#bedTempInput').val());
-});
-$('div#bedTemperature').on('click', 'a#bedTempLink', function() {
-    $('input#bedTempInput').val($(this).text());
+$('div#bedActiveTemperature').on('click', 'a#bedActiveTempLink', function() {
+    $('input#bedActiveTempInput').val($(this).text());
     $.askElle('gcode', "M140 S" + $(this).text());
 });
-$('div#head1Temperature button#setHead1Temp').on('click', function() {
-	var cmd = "G10 P1 S" + $('input#head1TempInput').val();
-	$.askElle('gcode', (currentTool == 1) ? cmd : cmd + "\nT1");
+$('div#head1ActiveTemperature').on('click', 'a#head1ActiveTempLink', function() {
+    $('input#head1ActiveTempInput').val($(this).text());
+    $.askElle('gcode', "G10 P1 S" + $(this).text());
 });
-$('div#head2Temperature button#setHead2Temp').on('click', function() {
-	var cmd = "G10 P2 S" + $('input#head1TempInput').val();
-	$.askElle('gcode', (currentTool == 2) ? cmd : cmd + "\nT2");
+$('div#head1StandbyTemperature').on('click', 'a#head1StandbyTempLink', function() {
+    $('input#head1StandbyTempInput').val($(this).text());
+    $.askElle('gcode', "G10 P1 R" + $(this).text());
 });
-$('div#head1Temperature').on('click', 'a#head1TempLink', function() {
-    $('input#head1TempInput').val($(this).text());
-	var cmd = "G10 P1 S" + $(this).text();
-    $.askElle('gcode', (currentTool == 1) ? cmd : cmd + "\nT1");
+$('div#head2ActiveTemperature').on('click', 'a#head2ActiveTempLink', function() {
+    $('input#head2ActiveTempInput').val($(this).text());
+	$.askElle('gcode', "G10 P2 S" + $(this).text());
 });
-$('div#head2Temperature').on('click', 'a#head2TempLink', function() {
-    $('input#head2TempInput').val($(this).text());
- 	var cmd = "G10 P2 S" + $(this).text();
-	$.askElle('gcode', (currentTool == 2) ? cmd : cmd + "\nT2");
+$('div#head2StandbyTemperature').on('click', 'a#head2StandbyTempLink', function() {
+    $('input#head2StandbyTempInput').val($(this).text());
+    $.askElle('gcode', "G10 P2 R" + $(this).text());
 });
-$('input#bedTempInput').keydown(function(event) {
+$('input#bedActiveTempInput').keydown(function(event) {
     if (event.which === 13) {
         event.preventDefault();
         $.askElle('gcode', "M140 S" + $(this).val());
+		$('input#bedActiveTempInput').blur();
     }
 });
-$('input#head1TempInput').keydown(function(event) {
+$('input#head1ActiveTempInput').keydown(function(event) {
     if (event.which === 13) {
         event.preventDefault();
-		var cmd = "G10 P1 S" + $(this).val();
-        $.askElle('gcode', (currentTool == 1) ? cmd : cmd + "\nT1");
+        $.askElle('gcode', "G10 P1 S" + $(this).val());
+		$('input#head1ActiveTempInput').blur();
     }
 });
-$('input#head2TempInput').keydown(function(event) {
+$('input#head1StandbyTempInput').keydown(function(event) {
     if (event.which === 13) {
         event.preventDefault();
-		var cmd = "G10 P2 S" + $(this).val();
-        $.askElle('gcode', (currentTool == 2) ? cmd : cmd + "\nT2");
+        $.askElle('gcode', "G10 P1 R" + $(this).val());
+		$('input#head1StandbyTempInput').blur()
     }
 });
-$('div#bedTemperature ul').on('click', 'a#addBedTemp', function() {
-    var tempVal = $('input#bedTempInput').val();
-    if (tempVal != "") {
-        var temps = storage.get('temps', 'bed');
-		var newTemp = parseInt(tempVal);
-		if (temps.indexOf(newTemp) < 0) {
-			temps.push(newTemp);
-			temps.sort(function(a, b){return b-a});
-			storage.set('temps.bed', temps);
-			loadSettings();
-		}
-    }else{
-        modalMessage("Error Adding Bed Temp!", "You must enter a Temperature to add it to the dropdown list", close);
+$('input#head2ActiveTempInput').keydown(function(event) {
+    if (event.which === 13) {
+        event.preventDefault();
+        $.askElle('gcode', "G10 P2 S" + $(this).val());
+		$('input#head2ActiveTempInput').blur();
     }
 });
-$('div#head1Temperature ul').on('click', 'a#addHead1Temp', function() {
-    addHeadTemp($('input#head1TempInput').val());
+$('input#head2StandbyTempInput').keydown(function(event) {
+    if (event.which === 13) {
+        event.preventDefault();
+        $.askElle('gcode', "G10 P2 R" + $(this).val());
+		$('input#head2StandbyTempInput').blur();
+    }
 });
-$('div#head2Temperature ul').on('click', 'a#addHead2Temp', function() {
-    addHeadTemp($('input#head2TempInput').val());
+$('div#bedActiveTemperature ul').on('click', 'a#addBedActiveTemp', function() {
+    addTemp($('input#bedActiveTempInput').val(), 'bed');
+});
+$('div#head1ActiveTemperature ul').on('click', 'a#addHead1ActiveTemp', function() {
+    addTemp($('input#head1ActiveTempInput').val(), 'active');
+});
+$('div#head1StandbyTemperature ul').on('click', 'a#addHead1StandbyTemp', function() {
+    addTemp($('input#head1StandbyTempInput').val(), 'standby');
+});
+$('div#head2ActiveTemperature ul').on('click', 'a#addHead2ActiveTemp', function() {
+    addTemp($('input#head2ActiveTempInput').val(), 'active');
+});
+$('div#head2StandbyTemperature ul').on('click', 'a#addHead2StandbyTemp', function() {
+    addTemp($('input#head2StandbyTempInput').val(), 'standby');
 });
 $('a#head1Click').on('click', function() {
 	$.askElle('gcode', (currentTool == 1) ? "T0" : "T1");
@@ -310,19 +326,22 @@ $('div#panicBtn button').on('click', function() {
 });
 
 //sliders
-$('#sFactor').slider({orientation:'vertical', reversed:true, min:10, max:300, step:10, value:100, tooltip:'show'});
+$('#sFactor').slider({orientation:'vertical', reversed:true, min:10, max:300, step:5, value:100, tooltip:'show'});
 $('#e1Factor').slider({orientation:'vertical', reversed:true, min:80, max:120, step:1, value:100, tooltip:'show'});
 $('#e2Factor').slider({orientation:'vertical', reversed:true, min:80, max:120, step:1, value:100, tooltip:'show'});
 
 $("#sFactor").on('slide', function(slideEvt) {
+	sSliderActive = true;
 	sFactor = slideEvt.value;
 	$("span#sPercent").text(sFactor);
 });
 $("#e1Factor").on('slide', function(slideEvt) {
+	e1SliderActive = true;
 	e1Factor = slideEvt.value;
 	$("span#e1Percent").text(e1Factor);
 });
 $("#e2Factor").on('slide', function(slideEvt) {
+	e2SliderActive = true;
 	e2Factor = slideEvt.value;
 	$("span#e2Percent").text(e2Factor);
 });
@@ -331,16 +350,19 @@ $("#sFactor").on('slideStop', function(slideEvt) {
 	sFactor = slideEvt.value;
 	$("span#sPercent").text(sFactor);
 	$.askElle('gcode', "M220 S"+sFactor);
+	sSliderActive = false;
 });
 $("#e1Factor").on('slideStop', function(slideEvt) {
 	e1Factor = slideEvt.value;
 	$("span#e1Percent").text(e1Factor);
 	$.askElle('gcode', "M221 D0 S"+e1Factor);
+	e1SliderActive = false;
 });
 $("#e2Factor").on('slideStop', function(slideEvt) {
 	e2Factor = slideEvt.value;
 	$("span#e2Percent").text(e2Factor);
 	$.askElle('gcode', "M221 D1 S"+e2Factor);
+	e2SliderActive = false;
 });
 
 //g files
@@ -437,14 +459,15 @@ $("div#messages button#clearLog").on('click', function(){
     message('clear', '');
 });
 
-function addHeadTemp(tempVal) {
+//In the following, 'whichTemp' should be 'active', 'standby' or 'bed'
+function addTemp(tempVal, whichTemp) {
     if (tempVal != "") {
-        var temps = storage.get('temps', 'head');
+        var temps = storage.get('temps', whichTemp);
 		var newTemp = parseInt(tempVal);
 		if (temps.indexOf(newTemp) < 0) {
 			temps.push(newTemp);
 			temps.sort(function(a, b){return b-a});
-			storage.set('temps.head', temps);
+			storage.set('temps.' + whichTemp, temps);
 			loadSettings();
 		}
     }else{
@@ -457,8 +480,8 @@ function getCookies() {
     if (!storage.get('settings')) {
         storage.set('settings', { pollDelay : 1000, layerHeight : 0.24, halfz : 0, noOK : 0 });
     }
-    if (!storage.get('temps')) {
-        storage.set('temps', {'bed' : [120,65,0], 'head' : [240,185,0]});
+    if (!storage.get('temps.active')) {
+        storage.set('temps', {'bed' : [120,65,0], 'active' : [240,185,0], 'standby' : [190,150,0] });
     }
 }
 
@@ -468,15 +491,21 @@ function loadSettings() {
     storage.get('settings', 'halfz')==1?$('div#settings input#halfz').prop('checked', true):$('div#settings input#halfz').prop('checked', false);
     storage.get('settings', 'noOK')==1?$('div#messages input#noOK').prop('checked', true):$('div#messages input#noOK').prop('checked', false);
     
-    $('div#bedTemperature ul').html('<li class="divider"></li><li><a href="#" id="addBedTemp">Add Temp</a></li>');
-    $('div#head1Temperature ul').html('<li class="divider"></li><li><a href="#" id="addHead1Temp">Add Temp</a></li>');
-    $('div#head2Temperature ul').html('<li class="divider"></li><li><a href="#" id="addHead2Temp">Add Temp</a></li>');
+    $('div#bedActiveTemperature ul').html('<li class="divider"></li><li><a href="#" id="addBedActiveTemp">Add Temp</a></li>');
+    $('div#head1ActiveTemperature ul').html('<li class="divider"></li><li><a href="#" id="addHead1ActiveTemp">Add Temp</a></li>');
+    $('div#head1StandbyTemperature ul').html('<li class="divider"></li><li><a href="#" id="addHead1StandbyTemp">Add Temp</a></li>');
+    $('div#head2ActiveTemperature ul').html('<li class="divider"></li><li><a href="#" id="addHead2ActiveTemp">Add Temp</a></li>');
+    $('div#head2StandbyTemperature ul').html('<li class="divider"></li><li><a href="#" id="addHead2StandbyTemp">Add Temp</a></li>');
     storage.get('temps', 'bed').forEach(function(item){
-        $('div#bedTemperature ul').prepend('<li><a href="#" id="bedTempLink">'+item+'</a></li>');
+        $('div#bedActiveTemperature ul').prepend('<li><a href="#" id="bedActiveTempLink">'+item+'</a></li>');
     });
-    storage.get('temps', 'head').forEach(function(item){
-        $('div#head1Temperature ul').prepend('<li><a href="#" id="head1TempLink">'+item+'</a></li>');
-        $('div#head2Temperature ul').prepend('<li><a href="#" id="head2TempLink">'+item+'</a></li>');
+    storage.get('temps', 'active').forEach(function(item){
+        $('div#head1ActiveTemperature ul').prepend('<li><a href="#" id="head1ActiveTempLink">'+item+'</a></li>');
+        $('div#head2ActiveTemperature ul').prepend('<li><a href="#" id="head2ActiveTempLink">'+item+'</a></li>');
+    });
+    storage.get('temps', 'standby').forEach(function(item){
+        $('div#head1StandbyTemperature ul').prepend('<li><a href="#" id="head1StandbyTempLink">'+item+'</a></li>');
+        $('div#head2StandbyTemperature ul').prepend('<li><a href="#" id="head2StandbyTempLink">'+item+'</a></li>');
     });
 }
 
@@ -623,9 +652,15 @@ function uploadFile(action, fromFile, toFile, printAfterUpload)
 
 // Update a table with file info and return [layerHeight, height, filament]
 function updateFileInfo(fileName, id) {
+	var info = $.askElle('fileinfo', fileName);
+	return updateFileTableInfo(info, id);
+}
+
+// Ditto where we already have the file info
+function updateFileTableInfo(info, id)
+{
 	clearSlic3rSettings(id);
 	var height = 0, filament = 0, locLayerHeight = 0;
-	var info = $.askElle('fileinfo', fileName);
 	if (info.hasOwnProperty('height') && isNumber(info.height))
 	{
 		height = info.height;
@@ -915,9 +950,7 @@ function parseResponse(res) {
         case res.indexOf('Firmware') >= 0:
             var strt = res.indexOf("SION:") +5 ;
             var end = res.indexOf(" ELEC");
-            if ($('p#firmVer').text() === "") {
-                $('p#firmVer').text(res.substr(strt, end - strt));
-            }
+            $('p#firmVer').text(res.substr(strt, end - strt));
             message('info', '<strong>M115</strong><br />' + res.replace(/\n/g, "<br />"));
             $.askElle("gcode", "M105");
             break;
@@ -1044,18 +1077,36 @@ function updatePage() {
             message('danger', 'Unknown Poll State : ' + status.status);
         }
 
-        $('span#bedTemp').text(status.heaters[0]);
-        $('span#head1Temp').text(status.heaters[1]);
-		$('span#head2Temp').text((status.heaters.length >= 3) ? status.heaters[2] : 0);
-        $('span#Xpos').text(status.pos[0]);
-        $('span#Ypos').text(status.pos[1]);
-        $('span#Zpos').text(status.pos[2]);
+		// Update the current and selected active/standby temperatures
+        $('span#bedCurrentTemp').text(status.heaters[0].toFixed(1) + "°C");
+		if (!$('input#bedActiveTempInput').is(":focus")) {
+			$('input#bedActiveTempInput').val(status.active[0].toFixed(0));
+		}
+        $('span#head1CurrentTemp').text(status.heaters[1].toFixed(1) + "°C");
+		if (!$('input#head1ActiveTempInput').is(":focus")) {
+			$('input#head1ActiveTempInput').val(status.active[1].toFixed(0));
+		}
+		if (!$('input#head1StandbyTempInput').is(":focus")) {
+			$('input#head1StandbyTempInput').val(status.standby[1].toFixed(0));
+		}
+		$('span#head2CurrentTemp').text((status.heaters.length >= 3) ? status.heaters[2].toFixed(1) + "°C" : "n/a");
+		if (!$('input#head2ActiveTempInput').is(":focus")) {
+			$('input#head2ActiveTempInput').val((status.active.length >= 3) ? status.active[2].toFixed(0) : "n/a");
+		}
+		if (!$('input#head2StandbyTempInput').is(":focus")) {
+			$('input#head2StandbyTempInput').val((status.standby.length >= 3) ? status.standby[2].toFixed(0) : "n/a");
+		}
+		
+		// Update the head position and zprobe
+        $('span#Xpos').text(status.pos[0].toFixed(2));
+        $('span#Ypos').text(status.pos[1].toFixed(2));
+        $('span#Zpos').text(status.pos[2].toFixed(2));
 		var ePosText = "";
 		for(var i=0; i < status.extr.length; ++i) {
 			if (i != 0) {
-				ePosText += ",";
+				ePosText += ", ";
 			}
-			ePosText += status.extr[i];
+			ePosText += status.extr[i].toFixed(1);
 		}
         $('span#Epos').text(ePosText);
         $('span#probe').text(status.probe);
@@ -1066,6 +1117,23 @@ function updatePage() {
         chartData[2].push((status.heaters.length >= 3) ? parseFloat(status.heaters[2]) : 0);
         chart.setData(parseChartData());
         chart.draw();
+		
+		// Update the slider positions
+		if (!sSliderActive) {
+			sFactor = status.sfactor;
+			$('#sFactor').slider('setValue', sFactor);
+			$("span#sPercent").text(sFactor);
+		}
+		if (!e1SliderActive) {
+			e1Factor = status.efactor[0];
+			$('#e1Factor').slider('setValue', e1Factor);
+			$("span#e1Percent").text(e1Factor);
+		}
+		if (status.efactor.length >= 2 && !e2SliderActive) {
+			e2Factor = status.efactor[1];
+			$('#e2Factor').slider('setValue', e2Factor);
+			$("span#e2Percent").text(e2Factor);
+		}
     }
 }
 

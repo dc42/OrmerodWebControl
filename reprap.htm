@@ -1,7 +1,7 @@
 <!DOCTYPE HTML>
 <html>
 <head>
-<title>Ormerod Control v0.98</title>
+<title>Ormerod Control v0.99</title>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <!-- Bootstrap -->
@@ -81,101 +81,127 @@ data-toggle="dropdown">
 <button type="button" value='reset' id='reset' class="btn btn-success btn-block hidden" title='Pause before reset'>Reset</button>      
 </div>
 </div>                    
-<div class="col-md-6">
+<div class="col-md-8">
 <!-- Temp control/chart -->
 <table class="table table-bordered" id="temp">
 <tbody>
 <tr>
-<th colspan="3" class="text-center">Heater Temps</th>
-<td rowspan="4">
-<div id="tempchart" style="width: 250px; height: 180px ">
-</div>
-</td>
+<th colspan="5" class="text-center">Heater Temperatures</th>
 </tr>
 <tr>
-<td id="head1" style="padding-top: 15px; width:65px"><strong>
-<a href='#' id='head1Click'>Head 1</a>
-</strong></td>
-<td style="padding-top: 15px; width:60px">
-<span id="head1Temp">0</span>&deg;C</td>
-<td>
-<div class="input-group" id="head1Temperature">
+<th style="width:65px"></th>
+<th class="text-center" style="width:60px">Current</th>
+<th class="text-center" style="width:100px">Active</th>
+<th class="text-center" style="width:100px">Standby</th>
+<td rowspan="4" style="width: 400px"><div id="tempchart" style="height:180px"></div></td>
+</tr>
+<tr>
+<td id="head1" style="padding-top: 15px; width:65px"><strong><a href='#' id='head1Click'>Head 1</a></strong></td>
+<td style="padding-top: 15px"><span id="head1CurrentTemp">0</span></td>
+<td style="width: 100px">
+<div class="input-group" id="head1ActiveTemperature">
+<input type="text" id='head1ActiveTempInput' class="form-control">
 <div class="input-group-btn">
-<button type="button" id='setHead1Temp' class="btn btn-default disabled">Set</button>
 <button type="button" class="btn btn-default dropdown-toggle disabled" data-toggle="dropdown">
 <span class="caret"></span>
 </button>
 <ul class="dropdown-menu">
 <li class="divider"></li>
-<li><a href="#" id='addHead1Temp'>Add Temp</a></li>                                                
+<li><a href="#" id='addHead1ActiveTemp'>Add Temp</a></li>                                                
 </ul>
 </div><!-- /btn-group -->
-<input type="text" id='head1TempInput' class="form-control">
+</div><!-- /input-group -->  
+</td>
+<td>
+<div class="input-group" id="head1StandbyTemperature">
+<input type="text" id='head1StandbyTempInput' class="form-control">
+<div class="input-group-btn">
+<button type="button" class="btn btn-default dropdown-toggle disabled" data-toggle="dropdown">
+<span class="caret"></span>
+</button>
+<ul class="dropdown-menu">
+<li class="divider"></li>
+<li><a href="#" id='addHead1StandbyTemp'>Add Temp</a></li>                                                
+</ul>
+</div><!-- /btn-group -->
 </div><!-- /input-group -->  
 </td>
 </tr>
 <tr>
-<td id="head2" style="padding-top: 15px; width:65px"><strong>
-<a href='#' id='head2Click'>Head 2</a>
-</strong></td>
-<td style="padding-top: 15px; width:60px">
-<span id="head2Temp">0</span>&deg;C</td>
-<td>
-<div class="input-group" id="head2Temperature">
+<td id="head2" style="padding-top: 15px"><strong><a href='#' id='head2Click'>Head 2</a></strong></td>
+<td style="padding-top: 15px"><span id="head2CurrentTemp">0</span></td>
+<td style="width:100px">
+<div class="input-group" id="head2ActiveTemperature">
+<input type="text" id='head2ActiveTempInput' class="form-control">
 <div class="input-group-btn">
-<button type="button" id='setHead2Temp' class="btn btn-default disabled">Set</button>
 <button type="button" class="btn btn-default dropdown-toggle disabled" data-toggle="dropdown">
 <span class="caret"></span>
 </button>
 <ul class="dropdown-menu">
 <li class="divider"></li>
-<li><a href="#" id='addHead2Temp'>Add Temp</a></li>                                                
+<li><a href="#" id='addHead2ActiveTemp'>Add Temp</a></li>                                                
 </ul>
 </div><!-- /btn-group -->
-<input type="text" id='head2TempInput' class="form-control">
+</div><!-- /input-group -->  
+</td>
+<td>
+<div class="input-group" id="head2StandbyTemperature">
+<input type="text" id='head2StandbyTempInput' class="form-control">
+<div class="input-group-btn">
+<button type="button" class="btn btn-default dropdown-toggle disabled" data-toggle="dropdown">
+<span class="caret"></span>
+</button>
+<ul class="dropdown-menu">
+<li class="divider"></li>
+<li><a href="#" id='addHead2StandbyTemp'>Add Temp</a></li>                                                
+</ul>
+</div><!-- /btn-group -->
 </div><!-- /input-group -->  
 </td>
 </tr>
 <tr>
 <td style="padding-top: 15px"><strong><span id="bedTxt">Bed</span></strong></td>
-<td style="padding-top: 15px; width:60px"><span id="bedTemp">0</span>&deg;C</td>
+<td style="padding-top: 15px"><span id="bedCurrentTemp">0</span></td>
 <td>
-<div class="input-group" id="bedTemperature">
+<div class="input-group" id="bedActiveTemperature">
+<input type="text" id='bedActiveTempInput' class="form-control">
 <div class="input-group-btn">
-<button type="button" id='setBedTemp' class="btn btn-default disabled">Set</button>
 <button type="button" class="btn btn-default dropdown-toggle disabled" data-toggle="dropdown">
 <span class="caret"></span>
 </button>
 <ul class="dropdown-menu">
 <li class="divider"></li>
-<li><a href="#" id='addBedTemp'>Add Temp</a></li>
+<li><a href="#" id='addBedActiveTemp'>Add Temp</a></li>
 </ul>
 </div><!-- /btn-group -->
-<input type="text" id='bedTempInput' class="form-control">
 </div><!-- /input-group -->                                        
 </td>
+<td></td>
 </tr>                                
 </tbody>
 </table>   
 </div>
-<div class="col-md-5">    
+<div class="col-md-3">    
 <!-- head pos -->
 <table class="table table-bordered">
 <tbody>
-<tr><th colspan="5" class="text-center">Head Position</th></tr>
+<tr><th colspan="3" class="text-center">Head Position</th></tr>
 <tr>
-<th class="text-center" width="18%">X</th>
-<th class="text-center" width="18%">Y</th>
-<th class="text-center" width="18%">Z</th>
-<th class="text-center" width="23%">Extruders</th>
-<th class="text-center" width="23%">Zprobe</th>
+<th class="text-center" width="33%">X</th>
+<th class="text-center" width="33%">Y</th>
+<th class="text-center" width="33%">Z</th>
 </tr>
 <tr>
 <td class="text-center"><span id="Xpos">0</span></td>
 <td class="text-center"><span id="Ypos">0</span></td>
 <td class="text-center"><span id="Zpos">0</span></td>
-<td class="text-center"><small><span id="Epos">0</span></small></td>
-<td class="text-center"><small><span id="probe">0</span></small></td>
+</tr>
+<tr>
+<th class="text-center" colspan="2">Extruders</th>
+<th class="text-center">Z probe</th>
+</tr>
+<td class="text-center" colspan="2"><span id="Epos">0</span></td>
+<td class="text-center"><span id="probe">0</span></td>
 </tr>
 </tbody>
 </table>
