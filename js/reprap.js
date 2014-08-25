@@ -134,21 +134,29 @@ $('#connect').on('click', function() {
 		$.askElle("connect");
         updatePage();        
         listGFiles();
-        $.askElle("gcode", "M115"); //get firmware
+		
+		// Get the machine name
 		var resp = $.askElle("name");
 		if (resp !== undefined && resp.hasOwnProperty('myName') && resp.myName.length != 0) {
 			$('span#machineName').text(resp.myName);
 		}
+		
+		// See if the machine is printing a file, if so get the details and switch to the print Status tab
 		resp = $.askElle("fileinfo", null);
 		if (resp != undefined && resp.hasOwnProperty('fileName')) {
 			var temp = updateFileTableInfo(resp, 'slic3rMain');
 			layerHeight = temp[0];
 			var height = temp[1], filament = temp[2];
 			$('span#gFileDisplay').html('<strong>Printing ' + resp.fileName + ' from Duet SD card</strong>');
-			resetLayerData(height, filament);
+			printStartTime = (new Date()).getTime() - resp.printDuration;
+			$('span#elapsed').text(resp.printDuration.toHHMMSS());
+			resetLayerData(height, filament, true);
 			$('progress#printProgressBar').show();
 			$('#tabs a:eq(1)').tab('show');
 		}
+
+		// Get the firmware version. The response will be captured automatically from the next status response.
+        $.askElle("gcode", "M115");
         poll();
     }
 });
@@ -303,9 +311,9 @@ $('div#panicBtn button').on('click', function() {
             btnVal = "M1";
             //switch off heaters
             $.askElle('gcode', "M140 S0"); //bed off
-            $.askElle('gcode', "G10 P1 S0\nT1"); //head 1 off
-            $.askElle('gcode', "G10 P2 S0\nT1"); //head 1 off
-            resetLayerData(0, 0);
+            $.askElle('gcode', "G10 P1 S0 R0\nT1"); //head 1 off
+            $.askElle('gcode', "G10 P2 S0 R0\nT1"); //head 2 off
+            resetLayerData(0, 0, false);
 			//no break
         case "M24":
             //resume
@@ -711,7 +719,7 @@ function printSDfile(fName)
 	$.askElle('gcode', "M23 " + fName + "\nM24");
 	message('success', "File [" + fName + "] sent to print");
 	$('span#gFileDisplay').html('<strong>Printing ' + fName + ' from Duet SD card</strong>');
-	resetLayerData(height, filament);
+	resetLayerData(height, filament, false);
 	$('progress#printProgressBar').show();
 	$('#tabs a:eq(1)').tab('show');
 }
@@ -1196,23 +1204,28 @@ function whichLayer(currZ) {
     return n;
 }
 
-function resetLayerData(h, f) {
+function resetLayerData(h, f, reconnecting) {
     //clear layer count,times and chart
-	if (h == 0) {
-		$('input#objheight').val("");
-	}
-	else {
-		$('input#objheight').val(h.toString());
-	}
+	$('input#objheight').val((h == 0) ? "" : h.toString());
 	objTotalFilament = f;
-	startingFilamentPos = currentFilamentPos;
-	objUsedFilament = [];
-	for(var i = 0; i < startingFilamentPos.length; ++i) {
-		objUsedFilament.push(0);
+	if (reconnecting) {
+		startingFilamentPos = [];
+		objUsedFilament = currentFilamentPos;
+		for(var i = 0; i < currentFilamentPos.length; ++i) {
+			startingFilamentPos.push(0);
+		}
+	} else {
+		startingFilamentPos = currentFilamentPos;
+		objUsedFilament = [];
+		for(var i = 0; i < currentFilamentPos.length; ++i) {
+			objUsedFilament.push(0);
+		}
 	}
     layerData = [];
 	filamentData = [];
-    printStartTime = null;
+	if (!reconnecting) {
+		printStartTime = null;
+	}
     setProgress(0, 'print', 0, 0);
     $('span#elapsed, span#lastlayer, table#finish span').text("00:00:00");
     chart2.setData(parseLayerData());
