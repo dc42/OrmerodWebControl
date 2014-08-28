@@ -1,6 +1,6 @@
 /*! Reprap Ormerod Web Control | by Matt Burnett <matt@burny.co.uk>. | open license
  */
-var ver = 0.99; //App version
+var ver = 1.00; //App version
 var polling = false; 
 var printing = false;
 var paused = false;
@@ -1005,6 +1005,8 @@ function updatePage() {
             $('button#connect').text("Connect");
         }
         $('span[id$="Temp"], span[id$="pos"]').text("0");
+		$('span[id$="State"]').text(getState(-1));
+		$('td#head1, td#head2').css('background-color', '#FFFFFF');
         disableButtons("head");
 		disableButtons("temp");
         disableButtons("panic");
@@ -1105,6 +1107,11 @@ function updatePage() {
 			$('input#head2StandbyTempInput').val((status.standby.length >= 3) ? status.standby[2].toFixed(0) : "n/a");
 		}
 		
+		// Update the heater statuses
+		$('span#head1State').text(getState(status.hstat[1]));
+		$('span#head2State').text(getState(status.hstat[2]));
+		$('span#bedState').text(getState(status.hstat[0]));
+		
 		// Update the head position and zprobe
         $('span#Xpos').text(status.pos[0].toFixed(2));
         $('span#Ypos').text(status.pos[1].toFixed(2));
@@ -1143,6 +1150,16 @@ function updatePage() {
 			$("span#e2Percent").text(e2Factor);
 		}
     }
+}
+
+function getState(state) {
+	switch(state) {
+	case 0: return 'off';
+	case 1: return 'standby';
+	case 2: return 'active';
+	case 3: return 'fault';
+	default: return '';
+	}
 }
 
 function getFilamentUsed() {
