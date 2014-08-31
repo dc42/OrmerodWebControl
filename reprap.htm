@@ -1,7 +1,7 @@
 <!DOCTYPE HTML>
 <html>
 <head>
-<title>Ormerod Control v1.00</title>
+<title>Ormerod Control v1.01</title>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <!-- Bootstrap -->
@@ -91,9 +91,9 @@ data-toggle="dropdown">
 <tr>
 <th style="width:65px"></th>
 <th class="text-center" style="width:60px">Current</th>
-<th class="text-center" style="width:100px">Active</th>
-<th class="text-center" style="width:100px">Standby</th>
-<td rowspan="4" style="width: 400px"><div id="tempchart" style="height:180px"></div></td>
+<th class="text-center" style="width:110px">Active</th>
+<th class="text-center" style="width:110px">Standby</th>
+<td rowspan="4"><div id="tempchart" style="height:180px"></div></td>
 </tr>
 <tr>
 <td id="head1" style="padding-top: 11px; padding-bottom: 1px; width:65px">
@@ -101,7 +101,7 @@ data-toggle="dropdown">
 <span id="head1State" style="font-size:small"></span>
 </td>
 <td style="padding-top: 15px"><span id="head1CurrentTemp">0</span></td>
-<td style="width: 100px">
+<td>
 <div class="input-group" id="head1ActiveTemperature">
 <input type="text" id='head1ActiveTempInput' class="form-control">
 <div class="input-group-btn">
@@ -136,7 +136,7 @@ data-toggle="dropdown">
 <span id="head2State" style="display:inline-block; vertical-align:bottom; font-size:small"></span>
 </td>
 <td style="padding-top: 15px; vertical-aligb: middle"><span id="head2CurrentTemp">0</span></td>
-<td style="width:100px">
+<td>
 <div class="input-group" id="head2ActiveTemperature">
 <input type="text" id='head2ActiveTempInput' class="form-control">
 <div class="input-group-btn">
@@ -206,11 +206,13 @@ data-toggle="dropdown">
 <td class="text-center"><span id="Zpos">0</span></td>
 </tr>
 <tr>
-<th class="text-center" colspan="2">Extruders</th>
+<th class="text-center">Extruders</th>
 <th class="text-center">Z probe</th>
+<th class="text-center">Fan RPM</th>
 </tr>
-<td class="text-center" colspan="2"><span id="Epos">0</span></td>
+<td class="text-center"><span id="Epos">0</span></td>
 <td class="text-center"><span id="probe">0</span></td>
+<td class="text-center"><span id="fanRPM">0</span></td>
 </tr>
 </tbody>
 </table>

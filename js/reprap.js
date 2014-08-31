@@ -1,6 +1,6 @@
 /*! Reprap Ormerod Web Control | by Matt Burnett <matt@burny.co.uk>. | open license
  */
-var ver = 1.00; //App version
+var ver = 1.01; //App version
 var polling = false; 
 var printing = false;
 var paused = false;
@@ -1029,6 +1029,9 @@ function updatePage() {
 			$('td#head2').css('background-color', '#E0E0E0');
 		} else {
 			$('td#head2').css('background-color', '#FFFFFF');
+		}
+		if (status.hasOwnProperty('fanRPM')) {
+			$('#fanRPM').text(status.fanRPM.toString());
 		}
 		if (status.status == "S") {
 			//stopped
