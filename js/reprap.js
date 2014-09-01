@@ -488,7 +488,7 @@ function getCookies() {
     if (!storage.get('settings')) {
         storage.set('settings', { pollDelay : 1000, layerHeight : 0.24, halfz : 0, noOK : 0 });
     }
-    if (!storage.get('temps.active')) {
+    if (!storage.get('temps') || !storage.get('temps.active')) {
         storage.set('temps', {'bed' : [120,65,0], 'active' : [240,185,0], 'standby' : [190,150,0] });
     }
 }
