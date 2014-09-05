@@ -1,6 +1,6 @@
 /*! Reprap Ormerod Web Control | by Matt Burnett <matt@burny.co.uk>. | open license
  */
-var ver = 1.01; //App version
+var ver = 1.02; //App version
 var polling = false; 
 var printing = false;
 var paused = false;
@@ -672,6 +672,9 @@ function updateFileTableInfo(info, id)
 	if (info.hasOwnProperty('height') && isNumber(info.height))
 	{
 		height = info.height;
+		if (id == 'slic3rModal') {
+			addSlic3rSetting(id, "Object height", info.height + 'mm');
+		}
 	}
 	if (info.hasOwnProperty('filament'))
 	{
