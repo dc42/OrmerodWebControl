@@ -1,6 +1,6 @@
 /*! Reprap Ormerod Web Control | by Matt Burnett <matt@burny.co.uk>. | open license
  */
-var ver = 1.05; //App version
+var ver = 1.06; //App version
 var polling = false; 
 var printing = false;
 var paused = false;
@@ -168,19 +168,19 @@ $('div#bedActiveTemperature').on('click', 'a#bedActiveTempLink', function() {
 });
 $('div#head1ActiveTemperature').on('click', 'a#head1ActiveTempLink', function() {
     $('input#head1ActiveTempInput').val($(this).text());
-    $.askElle('gcode', "G10 P1 S" + $(this).text());
+    $.askElle('gcode', "G10 P0 S" + $(this).text());
 });
 $('div#head1StandbyTemperature').on('click', 'a#head1StandbyTempLink', function() {
     $('input#head1StandbyTempInput').val($(this).text());
-    $.askElle('gcode', "G10 P1 R" + $(this).text());
+    $.askElle('gcode', "G10 P0 R" + $(this).text());
 });
 $('div#head2ActiveTemperature').on('click', 'a#head2ActiveTempLink', function() {
     $('input#head2ActiveTempInput').val($(this).text());
-	$.askElle('gcode', "G10 P2 S" + $(this).text());
+	$.askElle('gcode', "G10 P1 S" + $(this).text());
 });
 $('div#head2StandbyTemperature').on('click', 'a#head2StandbyTempLink', function() {
     $('input#head2StandbyTempInput').val($(this).text());
-    $.askElle('gcode', "G10 P2 R" + $(this).text());
+    $.askElle('gcode', "G10 P1 R" + $(this).text());
 });
 $('input#bedActiveTempInput').keydown(function(event) {
     if (event.which === 13) {
@@ -192,28 +192,28 @@ $('input#bedActiveTempInput').keydown(function(event) {
 $('input#head1ActiveTempInput').keydown(function(event) {
     if (event.which === 13) {
         event.preventDefault();
-        $.askElle('gcode', "G10 P1 S" + $(this).val());
+        $.askElle('gcode', "G10 P0 S" + $(this).val());
 		$('input#head1ActiveTempInput').blur();
     }
 });
 $('input#head1StandbyTempInput').keydown(function(event) {
     if (event.which === 13) {
         event.preventDefault();
-        $.askElle('gcode', "G10 P1 R" + $(this).val());
+        $.askElle('gcode', "G10 P0 R" + $(this).val());
 		$('input#head1StandbyTempInput').blur()
     }
 });
 $('input#head2ActiveTempInput').keydown(function(event) {
     if (event.which === 13) {
         event.preventDefault();
-        $.askElle('gcode', "G10 P2 S" + $(this).val());
+        $.askElle('gcode', "G10 P1 S" + $(this).val());
 		$('input#head2ActiveTempInput').blur();
     }
 });
 $('input#head2StandbyTempInput').keydown(function(event) {
     if (event.which === 13) {
         event.preventDefault();
-        $.askElle('gcode', "G10 P2 R" + $(this).val());
+        $.askElle('gcode', "G10 P1 R" + $(this).val());
 		$('input#head2StandbyTempInput').blur();
     }
 });
@@ -233,10 +233,10 @@ $('div#head2StandbyTemperature ul').on('click', 'a#addHead2StandbyTemp', functio
     addTemp($('input#head2StandbyTempInput').val(), 'standby');
 });
 $('a#head1Click').on('click', function() {
-	$.askElle('gcode', (currentTool == 1) ? "T0" : "T1");
+	$.askElle('gcode', (currentTool == 1) ? "T-1" : "T0");
 });
 $('a#head2Click').on('click', function() {
-	$.askElle('gcode', (currentTool == 2) ? "T0" : "T2");
+	$.askElle('gcode', (currentTool == 2) ? "T-1" : "T1");
 });
 
 //feed controls
