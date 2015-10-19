@@ -1,7 +1,8 @@
 OrmerodWebControl
 =================
 
-== THIS SOFTWARE IS OBSOLETE! The recommended replacement is https://github.com/chrishamm/DuetWebControl. ==
+== THIS SOFTWARE IS OBSOLETE! ==
+== Recommended replacement: https://github.com/chrishamm/DuetWebControl ==
 
 Web Control Interface for the RepRapPro Ormerod
 
