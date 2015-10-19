@@ -1,6 +1,8 @@
 OrmerodWebControl
 =================
 
+== THIS SOFTWARE IS OBSOLETE! The recommended replacement is https://github.com/chrishamm/DuetWebControl. ==
+
 Web Control Interface for the RepRapPro Ormerod
 
 To install, download this repository as a zip file and extract all the files and subfolders in OrmerodWebControl-master into the www directory on the SD card. File README.md is not needed on the SD card and may be deleted if desired.
